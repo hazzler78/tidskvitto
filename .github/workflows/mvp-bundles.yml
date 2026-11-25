@@ -1,0 +1,105 @@
+name: MVP-paket
+
+on:
+  push:
+    branches: [cursor/tidskvitto-mvp-9177]
+    paths:
+      - .github/workflows/mvp-bundles.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    name: DMG för Mac
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.100.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Bygg DMG
+        run: npx tauri build --bundles dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tidskvitto-dmg
+          path: target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+  msi:
+    name: MSI för Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.100.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Aktivera VBScript om MSI-byggaren behöver det
+        shell: pwsh
+        continue-on-error: true
+        run: dism /online /Enable-Feature /FeatureName:VBSCRIPT /All /NoRestart
+      - name: Bygg MSI
+        run: npx tauri build --bundles msi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tidskvitto-msi
+          path: target/release/bundle/msi/*.msi
+          if-no-files-found: error
+
+  release:
+    name: Publicera förhandsutgåva
+    needs: [dmg, msi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tidskvitto-*
+          merge-multiple: true
+          path: dist-packages
+      - name: Skapa förhandsutgåvan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          find dist-packages -type f -print
+          cat > /tmp/mvp-notes.md << 'EOF'
+          Tidskvitto 0.1.0 är en första testversion för 4 Days AI AB (4days.ai).
+
+          Det här är inte en färdig produkt. Prova gärna, och rapportera problem som ett ärende här i repot.
+
+          ## Så här installerar du
+
+          1. Ladda ner rätt fil för din dator.
+             - Mac: filen som slutar på `.dmg`
+             - Windows: filen som slutar på `.msi`
+          2. Öppna filen du laddade ner.
+          3. På Mac: dra Tidskvitto till Applications (mappen Program). Öppna sedan appen från Launchpad eller Applications.
+             På Windows: kör installationsfilen och följ anvisningarna på skärmen.
+          4. Starta Tidskvitto och godkänn mätningen i första rutan.
+
+          Mac-filen är för Mac med Apple-chip (M1 eller nyare). Om datorn varnar för en okänd utvecklare är det väntat i den här testversionen. På Mac väljer du Öppna. På Windows väljer du Mer information och sedan Kör ändå.
+          EOF
+          if gh release view v0.1.0-mvp >/dev/null 2>&1; then
+            gh release upload v0.1.0-mvp dist-packages/* --clobber
+            gh release edit v0.1.0-mvp --prerelease --notes-file /tmp/mvp-notes.md
+          else
+            gh release create v0.1.0-mvp dist-packages/* \
+              --prerelease \
+              --target "${{ github.sha }}" \
+              --title "Tidskvitto 0.1.0 – första testversionen" \
+              --notes-file /tmp/mvp-notes.md
+          fi
+          gh release view v0.1.0-mvp --json url,tagName,isPrerelease,assets --jq '{url:.url,tag:.tagName,prerelease:.isPrerelease,assets:[.assets[].name]}'
