@@ -40,15 +40,15 @@ function defaultSettings(): PublicSettings {
     idleThresholdSecs: 180,
     storeWindowTitles: true,
     shareTitlesWithAi: false,
-    aiProvider: "openai",
+    aiProvider: "grok",
     aiBaseUrl: "",
     aiModel: "",
     autostart: false,
     assumptions: defaultAssumptions(),
     hasApiKey: false,
     keyStorage: "none",
-    endpointHost: "api.openai.com",
-    resolvedModel: "gpt-4o-mini",
+    endpointHost: "api.x.ai",
+    resolvedModel: "grok-4.7",
   };
 }
 
@@ -111,12 +111,16 @@ function hostFor(provider: string, base: string): string {
       return base;
     }
   }
-  return provider === "anthropic" ? "api.anthropic.com" : "api.openai.com";
+  if (provider === "anthropic") return "api.anthropic.com";
+  if (provider === "grok") return "api.x.ai";
+  return "api.openai.com";
 }
 
 function modelFor(provider: string, model: string): string {
   if (model.trim()) return model.trim();
-  return provider === "anthropic" ? "claude-sonnet-4-5" : "gpt-4o-mini";
+  if (provider === "anthropic") return "claude-sonnet-4-5";
+  if (provider === "grok") return "grok-4.7";
+  return "gpt-4o-mini";
 }
 
 export function demoStatus(): HostStatus {

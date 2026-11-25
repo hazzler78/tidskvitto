@@ -66,6 +66,9 @@ pub struct Settings {
     pub ai_provider: String,
     pub ai_base_url: String,
     pub ai_model: String,
+    /// Sant när personen själv valt leverantör. Då lämnar vi valet orört.
+    #[serde(default)]
+    pub ai_choice_saved: bool,
     pub autostart: bool,
     pub assumptions: Assumptions,
 }
@@ -79,9 +82,10 @@ impl Default for Settings {
             idle_threshold_secs: 180,
             store_window_titles: true,
             share_titles_with_ai: false,
-            ai_provider: "openai".to_string(),
+            ai_provider: "grok".to_string(),
             ai_base_url: String::new(),
             ai_model: String::new(),
+            ai_choice_saved: false,
             autostart: false,
             assumptions: Assumptions::default(),
         }
@@ -94,6 +98,13 @@ impl Settings {
         self.ai_provider = normalize_provider(&self.ai_provider);
         self.ai_base_url = self.ai_base_url.trim().trim_end_matches('/').to_string();
         self.ai_model = sanitize_model(&self.ai_model);
+        if !self.ai_choice_saved
+            && self.ai_provider == "openai"
+            && self.ai_model.is_empty()
+            && self.ai_base_url.is_empty()
+        {
+            self.ai_provider = "grok".to_string();
+        }
         self.assumptions = self.assumptions.clamped();
         self.share_titles_with_ai = self.share_titles_with_ai && self.store_window_titles;
         self
@@ -102,6 +113,7 @@ impl Settings {
 
 fn normalize_provider(value: &str) -> String {
     match value.trim() {
+        "grok" | "xai" => "grok".to_string(),
         "anthropic" => "anthropic".to_string(),
         "compatible" => "compatible".to_string(),
         _ => "openai".to_string(),
@@ -145,6 +157,7 @@ pub fn validate_base_url(url: &str) -> Result<(), String> {
 
 pub fn default_base_url(provider: &str) -> &'static str {
     match provider {
+        "grok" => "https://api.x.ai/v1",
         "anthropic" => "https://api.anthropic.com/v1",
         _ => "https://api.openai.com/v1",
     }
@@ -152,6 +165,7 @@ pub fn default_base_url(provider: &str) -> &'static str {
 
 pub fn default_model(provider: &str) -> &'static str {
     match provider {
+        "grok" => "grok-4.7",
         "anthropic" => "claude-sonnet-4-5",
         _ => "gpt-4o-mini",
     }
@@ -203,6 +217,29 @@ mod tests {
         assert!(validate_base_url("http://localhost:8080/v1").is_ok());
         assert!(validate_base_url("http://example.com").is_err());
         assert!(validate_base_url("file:///tmp/x").is_err());
+    }
+
+    #[test]
+    fn fresh_install_uses_grok_without_a_banner() {
+        let settings = Settings::default().normalized();
+        assert_eq!(settings.ai_provider, "grok");
+        assert_eq!(resolved_model(&settings), "grok-4.7");
+        assert_eq!(endpoint_host(&settings), "api.x.ai");
+    }
+
+    #[test]
+    fn untouched_openai_default_moves_to_grok_but_an_explicit_choice_stays() {
+        let mut legacy = Settings::default();
+        legacy.ai_provider = "openai".to_string();
+        legacy.ai_choice_saved = false;
+        assert_eq!(legacy.normalized().ai_provider, "grok");
+
+        let mut chosen = Settings::default();
+        chosen.ai_provider = "openai".to_string();
+        chosen.ai_choice_saved = true;
+        let chosen = chosen.normalized();
+        assert_eq!(chosen.ai_provider, "openai");
+        assert_eq!(resolved_model(&chosen), "gpt-4o-mini");
     }
 
     #[test]

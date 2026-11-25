@@ -153,6 +153,9 @@ pub fn save_settings(
     if let Some(value) = patch.ai_model {
         settings.ai_model = value;
     }
+    if patch.ai_provider.is_some() || patch.ai_model.is_some() || patch.ai_base_url.is_some() {
+        settings.ai_choice_saved = true;
+    }
     if let Some(value) = patch.autostart {
         settings.autostart = value;
     }
