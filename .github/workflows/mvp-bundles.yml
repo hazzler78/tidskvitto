@@ -1,4 +1,5 @@
 # Bygger DMG och MSI och lägger dem på förhandsutgåvan v0.1.0-mvp.
+# Paketet ska innehålla Insikter och ingressen utan uppskattningsrutan.
 name: MVP-paket
 
 on:
