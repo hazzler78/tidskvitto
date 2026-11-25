@@ -4,8 +4,8 @@ use chrono::{Duration, Local};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, State};
 use tidskvitto_core::{
-    ai_payload, build_receipt, endpoint_host, plan_question, render_local_answer, resolved_model,
-    span_for, validate_base_url, AiTitles, Assumptions, RangeKind,
+    ai_payload, build_insights, build_receipt, endpoint_host, plan_question, render_local_answer,
+    resolved_model, span_for, validate_base_url, AiTitles, Assumptions, RangeKind,
 };
 
 use crate::platform;
@@ -119,6 +119,24 @@ pub fn receipt(
     let span = span_for(kind, anchor, &Local);
     let segments = state.db.segments_overlapping(span.start_ms, span.end_ms)?;
     Ok(build_receipt(&segments, &span, &settings.assumptions))
+}
+
+#[tauri::command]
+pub fn insights(state: State<'_, Arc<AppState>>) -> Result<tidskvitto_core::Insights, String> {
+    let settings = state.db.load_settings();
+    let today = Local::now().date_naive();
+    let first = tidskvitto_core::monday_of(today) - chrono::Duration::days(5 * 7);
+    let start = span_for(RangeKind::Week, first, &Local);
+    let end = span_for(RangeKind::Week, today, &Local);
+    let segments = state
+        .db
+        .segments_overlapping(start.start_ms, end.end_ms)?;
+    Ok(build_insights(
+        &segments,
+        today,
+        &Local,
+        &settings.assumptions,
+    ))
 }
 
 #[tauri::command]

@@ -234,6 +234,12 @@ h1 { margin: 0; font-family: var(--serif); font-size: 34px; letter-spacing: -0.0
 .fine { color: #57534e; font-size: 12px; line-height: 1.45; }
 .tag { font-family: var(--serif); margin: 14px 0 0; }
 
+.insight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.insight-grid p { margin: 0; line-height: 1.5; font-size: 14px; }
+.trend-table { display: grid; gap: 0; overflow-x: auto; }
+.trend-row { display: grid; grid-template-columns: 140px repeat(6, minmax(72px, 1fr)); gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; font-variant-numeric: tabular-nums; }
+.trend-row.head { border-top: 0; color: var(--muted); font-size: 12px; }
+.trend-row b { font-weight: 500; }
 .panel { display: flex; flex-direction: column; gap: 16px; }
 .card {
   background: white;
@@ -341,7 +347,7 @@ code { font-family: var(--mono); font-size: 12px; }
   .sidebar { position: sticky; top: 0; z-index: 2; }
   .nav { flex-direction: row; }
   .privacy-pill, .tagline { display: none; }
-  .layout, .grid-2 { grid-template-columns: 1fr; }
+  .layout, .grid-2, .insight-grid { grid-template-columns: 1fr; }
   .main { padding: 20px 16px 32px; }
   h1 { font-size: 28px; }
 }

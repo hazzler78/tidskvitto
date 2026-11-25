@@ -108,6 +108,48 @@ export interface SettingsPatch {
   apiKey?: string | null;
 }
 
+export interface InsightWeek {
+  label: string;
+  anchorDate: string;
+  activeMs: number;
+  current: boolean;
+  complete: boolean;
+}
+
+export interface CategoryTrend {
+  category: Category;
+  label: string;
+  weeksMs: number[];
+  previousMs: number;
+  latestMs: number;
+  deltaMs: number;
+}
+
+export interface TrendCall {
+  category: Category;
+  label: string;
+  text: string;
+  deltaMs: number;
+}
+
+export interface AgentStart {
+  category: Category;
+  label: string;
+  text: string;
+  estimatedSavingsMs: number;
+  basis: string;
+}
+
+export interface Insights {
+  weeks: InsightWeek[];
+  trends: CategoryTrend[];
+  grown: TrendCall | null;
+  shrunk: TrendCall | null;
+  agentStart: AgentStart | null;
+  comparisonLabel: string;
+  needsMoreWeeks: boolean;
+}
+
 export interface ChatReply {
   text: string;
   source: "lokal" | "ai";

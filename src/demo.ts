@@ -9,6 +9,8 @@ import {
   type ChatReply,
   type DayBucket,
   type HostStatus,
+  type InsightWeek,
+  type Insights,
   type PublicSettings,
   type RangeKind,
   type Receipt,
@@ -568,4 +570,95 @@ function topText(receipt: Receipt) {
     .map((a) => `${a.appName} ${formatDuration(a.activeMs)}`)
     .join(", ");
   return `Under ${receipt.periodLabel} var den aktiva tiden ${formatDuration(receipt.activeMs)}. Mest tid: ${cats}. Apparna i topp: ${apps}.`;
+}
+
+const FLAT_MS = 5 * 60_000;
+
+export function demoInsights(): Insights {
+  const today = startOfDay(new Date());
+  const thisMonday = weekDays(today)[0]!;
+  const weeks: InsightWeek[] = [];
+  const series = Object.fromEntries(CATEGORY_ORDER.map((category) => [category, [] as number[]])) as Record<
+    Category,
+    number[]
+  >;
+  const savings: { category: Category; activeMs: number; savingsMs: number }[][] = [];
+  for (let back = 5; back >= 0; back -= 1) {
+    const monday = addDays(thisMonday, -7 * back);
+    const receipt = demoReceipt("week", todayIso(monday));
+    const sunday = addDays(monday, 6);
+    weeks.push({
+      label: `v. ${isoWeek(monday)}`,
+      anchorDate: todayIso(monday),
+      activeMs: receipt.activeMs,
+      current: back === 0,
+      complete: sunday < today,
+    });
+    for (const category of CATEGORY_ORDER) {
+      series[category].push(receipt.categories.find((item) => item.category === category)?.activeMs ?? 0);
+    }
+    savings.push(
+      receipt.categories.map((item) => ({
+        category: item.category,
+        activeMs: item.activeMs,
+        savingsMs: item.estimatedSavingsMs,
+      })),
+    );
+  }
+  const complete = weeks.flatMap((week, index) => (week.complete && week.activeMs > 0 ? [index] : []));
+  const pair = complete.length >= 2 ? [complete[complete.length - 2]!, complete[complete.length - 1]!] : null;
+  const trends = CATEGORY_ORDER.map((category) => {
+    const previousMs = pair ? series[category][pair[0]!]! : 0;
+    const latestMs = pair ? series[category][pair[1]!]! : 0;
+    return {
+      category,
+      label: CATEGORY_LABEL[category],
+      weeksMs: series[category],
+      previousMs,
+      latestMs,
+      deltaMs: latestMs - previousMs,
+    };
+  });
+  const grownTrend = pair ? trends.filter((trend) => trend.deltaMs > FLAT_MS).sort((a, b) => b.deltaMs - a.deltaMs)[0] : undefined;
+  const shrunkTrend = pair ? trends.filter((trend) => trend.deltaMs < -FLAT_MS).sort((a, b) => a.deltaMs - b.deltaMs)[0] : undefined;
+  const call = (trend: (typeof trends)[number] | undefined, verb: "ökade" | "minskade") =>
+    trend && pair
+      ? {
+          category: trend.category,
+          label: trend.label,
+          deltaMs: trend.deltaMs,
+          text: `${trend.label} ${verb} med ${formatDuration(Math.abs(trend.deltaMs))} mellan ${weeks[pair[0]!]!.label} och ${weeks[pair[1]!]!.label}.`,
+        }
+      : null;
+  let agentIndex = complete.at(-1) ?? -1;
+  if (agentIndex < 0) {
+    for (let index = weeks.length - 1; index >= 0; index -= 1) {
+      if (weeks[index]!.activeMs > 0) {
+        agentIndex = index;
+        break;
+      }
+    }
+  }
+  const agent = agentIndex >= 0
+    ? savings[agentIndex]!.filter((item) => item.activeMs > 0).sort((a, b) => b.savingsMs - a.savingsMs)[0]
+    : undefined;
+  const agentWeek = agentIndex >= 0 ? weeks[agentIndex] : undefined;
+  return {
+    weeks,
+    trends,
+    grown: call(grownTrend, "ökade"),
+    shrunk: call(shrunkTrend, "minskade"),
+    comparisonLabel: pair ? `${weeks[pair[0]!]!.label} mot ${weeks[pair[1]!]!.label}` : "",
+    needsMoreWeeks: pair === null,
+    agentStart:
+      agent && agentWeek
+        ? {
+            category: agent.category,
+            label: CATEGORY_LABEL[agent.category],
+            estimatedSavingsMs: agent.savingsMs,
+            text: `Börja med ${CATEGORY_LABEL[agent.category].toLowerCase()}. ${agentWeek.complete ? agentWeek.label : `${agentWeek.label} (pågår)`} var den ${formatDuration(agent.activeMs)}. Med antagandet ${formatPercent(settings.assumptions[agent.category === "mote" ? "moten" : agent.category])} skulle en agent kunna ta ungefär ${formatDuration(agent.savingsMs)} av den tiden. Det är en uppskattning, inte en mätning.`,
+            basis: "Grund: tid i kategorin den senaste veckan med data, gånger antagandet. Ingen mejltext har lästs.",
+          }
+        : null,
+  };
 }

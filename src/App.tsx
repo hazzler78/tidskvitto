@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getSettings, getStatus, inDesktop, restoreDemo, saveSettings } from "./api";
 import { CATEGORY_LABEL, type Category, type HostStatus, type PublicSettings } from "./types";
 import { ChatView } from "./views/ChatView";
+import { InsightsView } from "./views/InsightsView";
 import { ReceiptView } from "./views/ReceiptView";
 import { SettingsView } from "./views/SettingsView";
 
-type View = "kvitto" | "chatt" | "installningar";
+type View = "kvitto" | "insikter" | "chatt" | "installningar";
 
 const EMPTY_STATUS: HostStatus = {
   os: "browser",
@@ -92,6 +93,7 @@ export function App() {
           {(
             [
               ["kvitto", "Kvitto"],
+              ["insikter", "Insikter"],
               ["chatt", "Chatt"],
               ["installningar", "Inställningar"],
             ] as const
@@ -159,6 +161,7 @@ export function App() {
             }}
           />
         ) : null}
+        {view === "insikter" ? <InsightsView refreshKey={refreshKey} /> : null}
         {view === "chatt" ? (
           <ChatView
             key={draft}
