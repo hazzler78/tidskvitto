@@ -231,13 +231,6 @@ h1 { margin: 0; font-family: var(--serif); font-size: 34px; letter-spacing: -0.0
 .dot.koordinering { background: #0f766e; }
 .dot.mote { background: #b45309; }
 .dot.ovrigt { background: #94a3b8; }
-.savings {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-.savings p { margin: 4px 0; }
-.savings strong { font-family: var(--serif); font-size: 28px; display: block; }
 .fine { color: #57534e; font-size: 12px; line-height: 1.45; }
 .tag { font-family: var(--serif); margin: 14px 0 0; }
 

@@ -59,7 +59,7 @@ export function ReceiptView({
         <div>
           <p className="eyebrow">4days.ai</p>
           <h1>Tidskvitto</h1>
-          <p className="sub">Var tiden tog vägen, och vad en agent skulle kunna ta.</p>
+          <p className="sub">Appen uppskattar din tid baserat på vad du gör, inte exakt mätning.</p>
         </div>
         <div className="segmented" role="group" aria-label="Period">
           <button type="button" aria-pressed={range === "day"} onClick={() => setRange("day")}>
@@ -134,12 +134,10 @@ export function ReceiptView({
                 </div>
               </>
             )}
-            <div className="savings">
-              <p className="kicker">Uppskattning, inte en mätning</p>
-              <strong>{formatDuration(receipt.estimatedSavingsMs)}</strong>
-              <p>som en agent skulle kunna ta över</p>
-              <p className="fine">{receipt.estimateNote}</p>
-              <p className="fine">{receipt.estimateBasis}</p>
+            <hr className="rule" />
+            <div className="row">
+              <span>En agent skulle kunna ta</span>
+              <b>{formatDuration(receipt.estimatedSavingsMs)}</b>
             </div>
             <p className="tag">En dag mer frihet. Med AI.</p>
           </article>
