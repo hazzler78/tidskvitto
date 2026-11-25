@@ -1,6 +1,6 @@
 [package]
 name = "tidskvitto-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Lokal kvittologik för Tidskvitto: kategorier, aggregering och uppskattning."
 license = "UNLICENSED"

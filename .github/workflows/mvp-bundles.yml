@@ -1,5 +1,4 @@
-# Bygger DMG och MSI och lägger dem på förhandsutgåvan v0.1.0-mvp.
-# Paketet ska innehålla Insikter och ingressen utan uppskattningsrutan.
+# Bygger DMG och MSI och lägger dem på en ny förhandsutgåva, v0.1.1-mvp.
 name: MVP-paket
 
 on:
@@ -79,7 +78,9 @@ jobs:
           set -eu
           find dist-packages -type f -print
           cat > /tmp/mvp-notes.md << 'EOF'
-          Tidskvitto 0.1.0 är en första testversion för 4 Days AI AB (4days.ai).
+          Tidskvitto 0.1.1 är en ny testversion för 4 Days AI AB (4days.ai). Den ersätter 0.1.0.
+
+          I den här versionen finns sidan Insikter, och uppskattningen ligger som en rad på kvittot i stället för i en egen ruta. Under rubriken står: appen uppskattar din tid utifrån vad du gör, inte som en exakt mätning.
 
           Det här är inte en färdig produkt. Prova gärna, och rapportera problem som ett ärende här i repot.
 
@@ -95,14 +96,9 @@ jobs:
 
           Mac-filen är för Mac med Apple-chip (M1 eller nyare). Om datorn varnar för en okänd utvecklare är det väntat i den här testversionen. På Mac väljer du Öppna. På Windows väljer du Mer information och sedan Kör ändå.
           EOF
-          if gh release view v0.1.0-mvp >/dev/null 2>&1; then
-            gh release upload v0.1.0-mvp dist-packages/* --clobber
-            gh release edit v0.1.0-mvp --prerelease --notes-file /tmp/mvp-notes.md
-          else
-            gh release create v0.1.0-mvp dist-packages/* \
-              --prerelease \
-              --target "${{ github.sha }}" \
-              --title "Tidskvitto 0.1.0 – första testversionen" \
-              --notes-file /tmp/mvp-notes.md
-          fi
-          gh release view v0.1.0-mvp --json url,tagName,isPrerelease,assets --jq '{url:.url,tag:.tagName,prerelease:.isPrerelease,assets:[.assets[].name]}'
+          gh release create v0.1.1-mvp dist-packages/* \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --title "Tidskvitto 0.1.1" \
+            --notes-file /tmp/mvp-notes.md
+          gh release view v0.1.1-mvp --json url,tagName,isPrerelease,assets --jq '{url:.url,tag:.tagName,prerelease:.isPrerelease,assets:[.assets[].name]}'

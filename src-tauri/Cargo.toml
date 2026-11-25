@@ -1,6 +1,6 @@
 [package]
 name = "tidskvitto"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tidskvitto — lokalt tidskvitto för 4 Days AI AB"
 edition = "2021"
 license = "UNLICENSED"
