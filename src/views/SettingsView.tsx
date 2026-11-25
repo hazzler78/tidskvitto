@@ -150,6 +150,7 @@ export function SettingsView({
                 value={draft.aiProvider}
                 onChange={(event) => setDraft({ ...draft, aiProvider: event.target.value })}
               >
+                <option value="grok">Grok</option>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
                 <option value="compatible">OpenAI-kompatibel</option>
@@ -169,7 +170,13 @@ export function SettingsView({
             <input
               value={draft.aiBaseUrl}
               onChange={(event) => setDraft({ ...draft, aiBaseUrl: event.target.value })}
-              placeholder={draft.aiProvider === "anthropic" ? "https://api.anthropic.com/v1" : "https://api.openai.com/v1"}
+              placeholder={
+                draft.aiProvider === "anthropic"
+                  ? "https://api.anthropic.com/v1"
+                  : draft.aiProvider === "grok"
+                    ? "https://api.x.ai/v1"
+                    : "https://api.openai.com/v1"
+              }
             />
           </label>
           <label className="field">

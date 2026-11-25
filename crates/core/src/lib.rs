@@ -6,6 +6,7 @@ mod aggregate;
 mod chat;
 mod classify;
 mod db;
+mod insights;
 mod settings;
 mod timeutil;
 
@@ -16,6 +17,7 @@ pub use aggregate::{
 pub use chat::{plan_question, render_local_answer, Focus, QuestionPlan};
 pub use classify::{classify, normalize_title, Category};
 pub use db::{Database, Segment};
+pub use insights::{build_insights, AgentStart, CategoryTrend, InsightWeek, Insights, TrendCall};
 pub use settings::{
     clamp_rate, endpoint_host, resolved_base_url, resolved_model, validate_base_url, Assumptions,
     Settings, ASSUMPTION_CAP, DEFAULT_EMAIL_RATE,

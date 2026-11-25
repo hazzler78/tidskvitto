@@ -4,8 +4,8 @@ use chrono::{Duration, Local};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, State};
 use tidskvitto_core::{
-    ai_payload, build_receipt, endpoint_host, plan_question, render_local_answer, resolved_model,
-    span_for, validate_base_url, AiTitles, Assumptions, RangeKind,
+    ai_payload, build_insights, build_receipt, endpoint_host, plan_question, render_local_answer,
+    resolved_model, span_for, validate_base_url, AiTitles, Assumptions, RangeKind,
 };
 
 use crate::platform;
@@ -122,6 +122,24 @@ pub fn receipt(
 }
 
 #[tauri::command]
+pub fn insights(state: State<'_, Arc<AppState>>) -> Result<tidskvitto_core::Insights, String> {
+    let settings = state.db.load_settings();
+    let today = Local::now().date_naive();
+    let first = tidskvitto_core::monday_of(today) - chrono::Duration::days(5 * 7);
+    let start = span_for(RangeKind::Week, first, &Local);
+    let end = span_for(RangeKind::Week, today, &Local);
+    let segments = state
+        .db
+        .segments_overlapping(start.start_ms, end.end_ms)?;
+    Ok(build_insights(
+        &segments,
+        today,
+        &Local,
+        &settings.assumptions,
+    ))
+}
+
+#[tauri::command]
 pub fn save_settings(
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
@@ -143,6 +161,9 @@ pub fn save_settings(
     if let Some(value) = patch.share_titles_with_ai {
         settings.share_titles_with_ai = value;
     }
+    let chose_provider = patch.ai_provider.is_some()
+        || patch.ai_model.is_some()
+        || patch.ai_base_url.is_some();
     if let Some(value) = patch.ai_provider {
         settings.ai_provider = value;
     }
@@ -152,6 +173,9 @@ pub fn save_settings(
     }
     if let Some(value) = patch.ai_model {
         settings.ai_model = value;
+    }
+    if chose_provider {
+        settings.ai_choice_saved = true;
     }
     if let Some(value) = patch.autostart {
         settings.autostart = value;

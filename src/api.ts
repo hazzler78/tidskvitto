@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   demoAsk,
   demoDeleteMeasurements,
+  demoInsights,
   demoReceipt,
   demoReset,
   demoRestore,
@@ -14,6 +15,7 @@ import type {
   HostStatus,
   PublicSettings,
   RangeKind,
+  Insights,
   Receipt,
   SettingsPatch,
 } from "./types";
@@ -40,6 +42,11 @@ export async function saveSettings(patch: SettingsPatch): Promise<PublicSettings
 export async function getReceipt(range: RangeKind, anchor: string): Promise<Receipt> {
   if (!inDesktop()) return demoReceipt(range, anchor);
   return invoke<Receipt>("receipt", { range, anchor });
+}
+
+export async function getInsights(): Promise<Insights> {
+  if (!inDesktop()) return demoInsights();
+  return invoke<Insights>("insights");
 }
 
 export async function ask(question: string): Promise<ChatReply> {

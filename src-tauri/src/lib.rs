@@ -5,8 +5,8 @@ mod secrets;
 mod tracker;
 
 use commands::{
-    ask, delete_everything, delete_measurements, get_settings, receipt, request_screen_permission,
-    save_settings, status,
+    ask, delete_everything, delete_measurements, get_settings, insights, receipt,
+    request_screen_permission, save_settings, status,
 };
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -73,6 +73,7 @@ pub fn run() {
             status,
             get_settings,
             receipt,
+            insights,
             save_settings,
             delete_measurements,
             delete_everything,
