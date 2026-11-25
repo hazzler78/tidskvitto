@@ -143,6 +143,9 @@ pub fn save_settings(
     if let Some(value) = patch.share_titles_with_ai {
         settings.share_titles_with_ai = value;
     }
+    let chose_provider = patch.ai_provider.is_some()
+        || patch.ai_model.is_some()
+        || patch.ai_base_url.is_some();
     if let Some(value) = patch.ai_provider {
         settings.ai_provider = value;
     }
@@ -153,7 +156,7 @@ pub fn save_settings(
     if let Some(value) = patch.ai_model {
         settings.ai_model = value;
     }
-    if patch.ai_provider.is_some() || patch.ai_model.is_some() || patch.ai_base_url.is_some() {
+    if chose_provider {
         settings.ai_choice_saved = true;
     }
     if let Some(value) = patch.autostart {
